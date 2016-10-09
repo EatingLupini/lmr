@@ -6,10 +6,33 @@
   <NewExtensions/>
   <sounds name="sound"/>
   <sprites name="sprites">
-    <sprite>sprites\sprite0</sprite>
+    <sprite>sprites\spr_player</sprite>
+    <sprite>sprites\spr_mask_wall1</sprite>
   </sprites>
-  <backgrounds name="background"/>
+  <backgrounds name="background">
+    <background>background\tex_mountain</background>
+    <background>background\tex_sand</background>
+    <background>background\tex_skybox_back</background>
+    <background>background\tex_skybox_down</background>
+    <background>background\tex_skybox_front</background>
+    <background>background\tex_skybox_left</background>
+    <background>background\tex_skybox_right</background>
+    <background>background\tex_skybox_up</background>
+    <background>background\tex_sky_tile</background>
+    <background>background\tex_wallrock</background>
+  </backgrounds>
   <paths name="paths"/>
+  <objects name="objects">
+    <object>objects\obj_init</object>
+    <object>objects\obj_controller</object>
+    <object>objects\obj_player</object>
+    <object>objects\obj_wall</object>
+    <object>objects\obj_wall1</object>
+  </objects>
+  <rooms name="rooms">
+    <room>rooms\room0</room>
+    <room>rooms\room1</room>
+  </rooms>
   <help>
     <rtf>help.rtf</rtf>
   </help>
