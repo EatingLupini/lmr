@@ -8,6 +8,7 @@
   <sprites name="sprites">
     <sprite>sprites\spr_player</sprite>
     <sprite>sprites\spr_mask_wall1</sprite>
+    <sprite>sprites\spr_skin1</sprite>
   </sprites>
   <backgrounds name="background">
     <background>background\tex_mountain</background>
@@ -22,12 +23,18 @@
     <background>background\tex_wallrock</background>
   </backgrounds>
   <paths name="paths"/>
+  <scripts name="scripts">
+    <script>scripts\scr_movements.gml</script>
+    <script>scripts\scr_enh_collision.gml</script>
+    <script>scripts\scr_set_resolution.gml</script>
+  </scripts>
   <objects name="objects">
     <object>objects\obj_init</object>
     <object>objects\obj_controller</object>
     <object>objects\obj_player</object>
     <object>objects\obj_wall</object>
     <object>objects\obj_wall1</object>
+    <object>objects\obj_wall2</object>
   </objects>
   <rooms name="rooms">
     <room>rooms\room0</room>

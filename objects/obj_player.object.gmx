@@ -28,30 +28,42 @@
             <string>///VARIABILI DEL GIOCATORE
 
 //posizione iniziale
-//x = 0;    //posizione x corrente
-//y = 0;    //posizione y corrente
-z = 0;      //posizione z corrente
-zhigh = 16; //altezza personaggio
-xnew = 0;   //x successiva in base alla velocità e direzione
-ynew = 0;   //y successiva in base alla velocità e direzione
-zgravity = 1;   //valore della gravità sull'asse z
-zspeed = 0;     //velocità attuale sull'asse z
+//x             = 0;                //posizione x corrente
+//y             = 0;                //posizione y corrente
+xprev           = x;                //perchè xprevious è lezzo
+yprev           = y;                //perchè yprevious è lezzo
+z               = 0;                //posizione z corrente
+zhigh           = 32;               //altezza corrente personaggio
+zhigh_stand     = 32;               //altezza in piedi
+zhigh_crouch    = zhigh_stand/2;    //altezza da abbassati
+xnew            = 0;                //x successiva in base alla velocità e direzione
+ynew            = 0;                //y successiva in base alla velocità e direzione
+zgravity        = 1;                //valore della gravità sull'asse z
+zspeed          = 0;                //velocità attuale sull'asse z
 
 //camera
-camx = 0;   //posizione x dove guarda la camera
-camy = 0;   //posizione y dove guarda la camera
-camz = 0;   //posizione z dove guarda la camera
+camx            = 0;                //posizione x dove guarda la camera
+camy            = 0;                //posizione y dove guarda la camera
+camz            = 0;                //posizione z dove guarda la camera
 
 //direzione
-direction = 0;  //direzione laterale dove guarda la camera
-zdirection = 0; //direzione verticale dove guarda la camera
+direction       = 0;                //direzione laterale dove guarda la camera
+zdirection      = 0;                //direzione verticale dove guarda la camera
 
 //velocità
-max_speed = 8;  //velocità massima
-cur_speed = 0;  //velocità corrente (avanti e indietro)
-str_speed = 0;  //velocità corrente (laterale)
-inc_speed = 1;  //incremento velocità
+max_speed       = 8;                //velocità massima corrente
+stand_speed     = 8;                //velocità massima in piedi
+crouch_speed    = stand_speed/2;    //velocità massima abbassato
+cur_speed       = 0;                //velocità corrente (avanti e indietro)
+str_speed       = 0;                //velocità corrente (laterale)
+inc_speed       = 1;                //incremento velocità
+cro_speed       = 2;                //velocità nell'abbassarsi
+jump_force      = 8;                //forza iniziale del salto
 
+//stato
+is_crouching    = false;            //true se abbassato
+
+//nasconde puntatore mouse
 window_set_cursor(cr_none);
 
 
@@ -80,17 +92,18 @@ window_set_cursor(cr_none);
             <string>///MOVE CAMERA
 direction += ((display_get_width()/2) -display_mouse_get_x()) * 0.2;
 zdirection += ((display_get_height()/2) -display_mouse_get_y()) * 0.2;
-if(zdirection &gt; 85) zdirection = 85;
-if(zdirection &lt; -85) zdirection = -85;
+//if(zdirection &gt; 85) zdirection = 85;
+//if(zdirection &lt; -85) zdirection = -85;
 display_mouse_set(display_get_width()/2, display_get_height()/2);
 
 camx = x + lengthdir_x(128, direction);
 camy = y + lengthdir_y(128, direction);
-camz = 10 + zdirection;
+camz = z + zhigh + zdirection;
 
 /*camx = x + cos(degtorad(direction));
 camy = y - sin(degtorad(direction));
 camz = z + tan(degtorad(zdirection));*/
+
 
 </string>
           </argument>
@@ -112,11 +125,97 @@ camz = z + tan(degtorad(zdirection));*/
         <arguments>
           <argument>
             <kind>1</kind>
-            <string>///MOVIMENTI lezzi
+            <string>///MOVIMENTI/SALTO/ABBASSARSI
+var spid = point_distance(xprev, yprev, x, y);
+var dair = point_direction(xprev, yprev, x, y);
 xnew = 0;
 ynew = 0;
 
 if(keyboard_check(ord("W")))
+{
+    cur_speed += inc_speed;
+    cur_speed = clamp(cur_speed, 0, max_speed);
+    //if(cur_speed &lt; max_speed) cur_speed += inc_speed;
+    xnew += lengthdir_x(cur_speed, direction);
+    ynew += lengthdir_y(cur_speed, direction);
+}
+if(keyboard_check(ord("S")))
+{
+    cur_speed += inc_speed;
+    cur_speed = clamp(cur_speed, 0, max_speed);
+    //if(cur_speed &lt; max_speed) cur_speed += inc_speed;
+    xnew += lengthdir_x(cur_speed, direction -180);
+    ynew += lengthdir_y(cur_speed, direction -180);
+}
+if(keyboard_check(ord("A")))
+{
+    str_speed += inc_speed;
+    str_speed = clamp(str_speed, 0, max_speed/2);
+    //if(str_speed &lt; max_speed/2) str_speed += inc_speed;
+    xnew += lengthdir_x(str_speed, direction +90);
+    ynew += lengthdir_y(str_speed, direction +90);
+}
+if(keyboard_check(ord("D")))
+{
+    str_speed += inc_speed;
+    str_speed = clamp(str_speed, 0, max_speed/2);
+    //if(str_speed &lt; max_speed/2) str_speed += inc_speed;
+    xnew += lengthdir_x(str_speed, direction -90);
+    ynew += lengthdir_y(str_speed, direction -90);
+}
+if(!keyboard_check(ord("W")) and !keyboard_check(ord("S")) and !keyboard_check(ord("A")) and !keyboard_check(ord("D")))
+{
+    if(cur_speed &gt; 0) cur_speed -= inc_speed;
+    else cur_speed = 0;
+    if(str_speed &gt; 0) str_speed -= inc_speed;
+    else str_speed = 0;
+    if(spid -inc_speed &gt; 0)
+    {
+        xnew += lengthdir_x(spid - inc_speed, dair);
+        ynew += lengthdir_y(spid - inc_speed, dair);
+    }
+    else
+    {
+        spid = 0;
+        xnew += lengthdir_x(spid, dair);
+        ynew += lengthdir_y(spid, dair);
+    }
+    //show_debug_message("spid: " + string(spid));
+}
+
+//crouch
+if(keyboard_check(vk_control))
+{
+    zhigh -= cro_speed;                                 // &lt;----
+    zhigh = clamp(zhigh, zhigh_crouch, zhigh_stand);    // &lt;----
+    
+    //zhigh = zhigh_crouch;
+    max_speed = crouch_speed;
+}
+else
+{
+    if(!scr_enh_collision(x, y, z, zhigh_stand, 0, 0))
+    {
+        zhigh += cro_speed;                                 // &lt;----
+        zhigh = clamp(zhigh, zhigh_crouch, zhigh_stand);    // &lt;----
+    
+        //zhigh = zhigh_stand;
+        max_speed = stand_speed;
+    }
+}
+
+//salto
+if(keyboard_check_pressed(vk_space))
+{
+    if(zspeed == 0)
+    {
+        zspeed = jump_force;
+    }
+}
+
+
+//----------------OLD-------------------
+/*if(keyboard_check(ord("W")))
 {
     if(cur_speed &lt; max_speed) cur_speed += inc_speed;
     xnew += lengthdir_x(cur_speed, direction);
@@ -157,7 +256,7 @@ if(!keyboard_check(ord("A")) and !keyboard_check(ord("D")))
     else str_speed = 0;
     xnew += lengthdir_x(str_speed, direction +90);
     ynew += lengthdir_y(str_speed, direction +90);
-}
+}*/
 
 //xnew e ynew vengono utilizzate nello script COLLISIONI
 /*if(instance_place(x +xnew, y +ynew, obj_wall) == noone)
@@ -165,6 +264,140 @@ if(!keyboard_check(ord("A")) and !keyboard_check(ord("D")))
     x += xnew;
     y += ynew;
 }*/
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///COLLISIONI e GRAVITA'
+//collisioni laterali
+/*var nocoll = true;
+for(var i=0; i&lt;instance_number(obj_wall); i++)
+{
+    var curid = instance_find(obj_wall, i);
+    var coll = place_meeting(x +xnew, y +ynew, curid);
+    var cond1 = curid.z &lt; z +zhigh and curid.z +curid.zhigh &gt; z +zhigh;
+    var cond2 = curid.z +curid.zhigh &gt; z and curid.z &lt; z +zhigh;
+    if(coll and (cond1 or cond2))
+    {
+        //show_debug_message("cond1: " + string(cond1));
+        //show_debug_message("cond2: " + string(cond2));
+        
+        //c'è almeno un blocco che mi fa collidere
+        nocoll = false;
+        break;
+    }
+}
+
+//mi muovo solo se non collido
+if(nocoll)
+{
+    x += xnew;
+    y += ynew;
+}*/
+
+//new coll--------------------------------
+xprev = x;
+yprev = y;
+
+//var spd = cur_speed;
+var spd = point_distance(x, y, x + xnew, y + ynew);
+//min(point_distance(x, y, x + xnew, y + ynew), spd);
+dir = point_direction(x, y, x + xnew, y + ynew);
+var xmot, ymot;
+x = xprevious;
+y = yprevious;
+for (i = 0; i &lt; 90; i += 5)
+{
+    xmot = x + lengthdir_x(spd, dir + i);
+    ymot = y + lengthdir_y(spd, dir + i);
+    if (!scr_enh_collision(xmot, ymot, z, zhigh, 0, 0)) //(!place_meeting(xmot, ymot, obj_wall))
+    {
+        x = xmot;
+        y = ymot;
+        break;
+    }
+
+    xmot = x + lengthdir_x(spd, dir - i);
+    ymot = y + lengthdir_y(spd, dir - i);
+    if (!scr_enh_collision(xmot, ymot, z, zhigh, 0, 0)) //(!place_meeting(xmot, ymot, obj_wall))
+    {
+        x = xmot;
+        y = ymot;
+        break;
+    }
+}
+//----------------------------------------
+
+//gravità
+var nearid = noone; //blocco con cui potrei collidere sotto di me
+var zmax = 0;       //altezza del blocco con cui potrei collidere
+for(var i=0; i&lt;instance_number(obj_wall); i++)
+{
+    var curid = instance_find(obj_wall, i);
+    if(place_meeting(x, y, curid) and curid.z +curid.zhigh &lt;= z and curid.z +curid.zhigh &gt;= zmax)
+    {
+        nearid = curid;
+        zmax = curid.z +curid.zhigh;
+        //show_debug_message("eccolo: " + string(zmax))
+    }
+}
+
+if(z + zspeed &gt; zmax)
+{
+    zspeed -= zgravity;
+    if(!scr_enh_collision(x, y, z +zspeed, zhigh, 0, 0))
+        z += zspeed;
+    else
+        zspeed = 0;
+}
+else
+{
+    z = zmax;
+    zspeed = 0;
+}
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="8" enumb="64">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///START DRAW
+d3d_set_projection_ortho(0,0,display_get_gui_width(),display_get_gui_height(),0);
+d3d_set_hidden(false);
+d3d_set_lighting(false);
 
 </string>
           </argument>
@@ -186,48 +419,66 @@ if(!keyboard_check(ord("A")) and !keyboard_check(ord("D")))
         <arguments>
           <argument>
             <kind>1</kind>
-            <string>///SALTO e COLLISIONI
-//collisioni laterali
-/*var nocoll = true;
-for(var i=0; i&lt;instance_number(obj_wall); i++)
-{
-    var curid = instance_find(obj_wall, i);
-    var coll = place_meeting(x +xnew, y +ynew, curid);
-    if(coll and (curid.z &gt; z +zhigh or curid.z +curid.zhigh &lt; z))
-    {
-        //c'è almeno un blocco che mi fa collidere
-        nocoll = false;
-        break;
-    }
-}
-//mi muovo solo se non collido
-if(nocoll)
-{
-    x += xnew;
-    y += ynew;
-}*/
+            <string>///DRAW AIM
+draw_set_colour(c_white);
+var cx = display_get_gui_width()/2;
+var cy = display_get_gui_height()/2;
+draw_line_width(cx -16, cy, cx +16, cy, 2);
+draw_line_width(cx, cy -16, cx, cy +16, 2);
 
-//gravità
-/*
-var nearid = noone; //blocco con cui potrei collidere sotto di me
-var zmax = 0;       //altezza del blocco con cui potrei collidere
-for(var i=0; i&lt;instance_number(obj_wall); i++)
-{
-    var curid = instance_find(obj_wall, i);
-    if(place_meeting(xnew, ynew, curid) and curid.z +curid.zhigh &lt; z and curid.z +curid.zhigh &gt; zmax)
-    {
-        nearid = curid;
-        zmax = curid.z +curid.zhigh;
-    }
-}
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///DRAW DEBUG
+var spid = point_distance(xprevious, yprevious, x, y);
+var dair = point_direction(xprevious, yprevious, x, y);
 
-zspeed -= zgravity;
-z += zspeed;
-if(z &lt; zmax)
-{
-    z = zmax;
-}
-*/
+draw_text(8, 0, "z: " + string(z));
+draw_text(8, 16, "zspeed: " + string(zspeed));
+draw_text(8, 32, "cur_speed: " + string(cur_speed));
+draw_text(8, 48, "str_speed: " + string(str_speed));
+draw_text(8, 64, "max_speed: " + string(max_speed));
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///END DRAW
+d3d_set_hidden(true);
+d3d_set_lighting(true);
 
 </string>
           </argument>
@@ -253,7 +504,63 @@ if(z &lt; zmax)
             <kind>1</kind>
             <string>///CAMERA
 //d3d_set_projection(x, y, 10 +z, xt, yt, 10 +zt, 0, 0, 1);
-d3d_set_projection(x, y, z +zhigh, camx, camy, camz +zhigh, 0, 0, 1);
+d3d_set_projection(x, y, z +zhigh -2, camx, camy, camz, 0, 0, 1);
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="10" enumb="80">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///test
+var nea = instance_nearest(x, y, obj_wall);
+x = nea.x +32;
+y = nea.y +32;
+z = nea.z +nea.zhigh +32;
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="10" enumb="79">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///test
+var nea = instance_nearest(x, y, obj_wall);
+x = 160;
+y = 160;
+z = 0;
 
 </string>
           </argument>
