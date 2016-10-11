@@ -1,5 +1,6 @@
 ///scr_enh_collision(x, y, z, zhigh, hsp, vsp)
 //Ritorna true se si verifica una collisione con parenti di obj_wall
+//Edit: ritorna l'id dell'oggetto con cui collide altrimenti ritorna noone
 var ics = argument0;
 var ips = argument1;
 var zet = argument2;
@@ -16,10 +17,10 @@ for(var i=0; i<instance_number(obj_wall); i++)
     if(coll and (cond1 or cond2))
     {
         //c'è almeno un blocco che mi fa collidere
-        return true;
+        return curid; //return true;
         break;
     }
 }
 
-return false;
+return noone; //return false;
 

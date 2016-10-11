@@ -8,7 +8,70 @@
   <parentName>&lt;undefined&gt;</parentName>
   <maskName>&lt;undefined&gt;</maskName>
   <events>
+    <event eventtype="3" enumb="0">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///SCELTA
+if(keyboard_check_released(ord("1")))
+{
+    global.server = true;
+    room_goto_next();
+}
+if(keyboard_check_released(ord("2")))
+{
+    global.server = false;
+    room_goto_next();
+}
+if(keyboard_check_released(ord("0")))
+{
+    global.server = -1;
+    room_goto_next();
+}
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
     <event eventtype="7" enumb="2">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///VARIABILI GLOBALI
+global.server = -1;
+global.camsin = 0; //sin(direction*pi/180);
+global.camcos = 0; //cos(direction*pi/180);
+
+</string>
+          </argument>
+        </arguments>
+      </action>
       <action>
         <libid>1</libid>
         <id>603</id>
@@ -27,6 +90,36 @@
             <kind>1</kind>
             <string>///ADATTAMENTO RISOLUZIONE AUTOMATICA
 scr_set_resolution();
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="8" enumb="64">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///DRAW MENU
+draw_set_halign(fa_center);
+draw_set_color(c_white);
+draw_text(display_get_gui_width()/2, display_get_gui_height()/2 -64, "1 -&gt; Crea server");
+draw_text(display_get_gui_width()/2, display_get_gui_height()/2 -32, "2 -&gt; Entra in un server");
+draw_text(display_get_gui_width()/2, display_get_gui_height()/2 -0, "0 -&gt; Allenamento");
+draw_set_halign(fa_left);
 
 </string>
           </argument>

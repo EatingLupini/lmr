@@ -27,11 +27,11 @@
             <kind>1</kind>
             <string>///POSIZIONE
 z = 0;
-zhigh = 64;
+zhigh = 128;
 
 //modello
 model_wall = d3d_model_create();
-d3d_model_block(model_wall,0.0000,0.0000,0.0000,64.0000,64.0000,64.0000,1.0000,1.0000);
+d3d_model_block(model_wall,0.0000,0.0000,0.0000,64.0000,64.0000,128.0000,1.0000,1.0000);
 
 </string>
           </argument>
@@ -56,7 +56,7 @@ d3d_model_block(model_wall,0.0000,0.0000,0.0000,64.0000,64.0000,64.0000,1.0000,1
           <argument>
             <kind>1</kind>
             <string>///DISEGNA MODELLO
-texture_set_repeat(1);
+texture_set_repeat(true);
 
 draw_set_color(c_white);
 d3d_model_draw(model_wall,x,y,z,background_get_texture(tex_wallrock));

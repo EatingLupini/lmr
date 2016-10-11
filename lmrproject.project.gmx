@@ -6,8 +6,11 @@
   <NewExtensions/>
   <sounds name="sound"/>
   <sprites name="sprites">
+    <sprite>sprites\spr_spawn</sprite>
     <sprite>sprites\spr_player</sprite>
     <sprite>sprites\spr_mask_wall1</sprite>
+    <sprite>sprites\spr_mask_plat1</sprite>
+    <sprite>sprites\spr_mask_moving_plat1</sprite>
     <sprite>sprites\spr_skin1</sprite>
   </sprites>
   <backgrounds name="background">
@@ -21,8 +24,13 @@
     <background>background\tex_skybox_up</background>
     <background>background\tex_sky_tile</background>
     <background>background\tex_wallrock</background>
+    <background>background\tex_lava</background>
+    <background>background\tex_metal_floor1</background>
+    <background>background\tex_metal_floor2</background>
   </backgrounds>
-  <paths name="paths"/>
+  <paths name="paths">
+    <path>paths\pth_wall3</path>
+  </paths>
   <scripts name="scripts">
     <script>scripts\scr_movements.gml</script>
     <script>scripts\scr_enh_collision.gml</script>
@@ -31,10 +39,17 @@
   <objects name="objects">
     <object>objects\obj_init</object>
     <object>objects\obj_controller</object>
+    <object>objects\obj_server_controller</object>
+    <object>objects\obj_client_controller</object>
+    <object>objects\obj_spawn</object>
     <object>objects\obj_player</object>
+    <object>objects\obj_other_player</object>
     <object>objects\obj_wall</object>
+    <object>objects\obj_wall_moving</object>
     <object>objects\obj_wall1</object>
     <object>objects\obj_wall2</object>
+    <object>objects\obj_wall3_moving</object>
+    <object>objects\obj_wall4_moving</object>
   </objects>
   <rooms name="rooms">
     <room>rooms\room0</room>

@@ -25,6 +25,33 @@
         <arguments>
           <argument>
             <kind>1</kind>
+            <string>///SERVER/CLIENT/TRAINING
+switch(global.server)
+{
+    case 1: instance_create(0, 0, obj_server_controller); break;
+    case 0: instance_create(0, 0, obj_client_controller); break;
+}
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
             <string>///INIZIALIZZA 3D
 d3d_start();
 d3d_set_hidden(false);
@@ -107,8 +134,8 @@ tex_mount = tex_mountain
 //skybox
 dist = 5000;
 dz = 0; //-3800;
-
-d3d_draw_floor(-dist, -dist, -dist, room_width +dist, room_height +dist, -dist, background_get_texture(tex_skybox_down),1,1); //1000(height_box) -&gt; 480 //500 -&gt; X
+d3d_draw_floor(-dist, -dist, 16, room_width +dist, room_height +dist, 16, background_get_texture(tex_lava),room_width/background_get_width(tex_lava)*100,room_height/background_get_height(tex_lava)*100); //lava
+d3d_draw_floor(-dist, -dist, -dist, room_width +dist, room_height +dist, -dist, background_get_texture(tex_skybox_down),1,1);
 d3d_draw_floor(-dist, -dist, +dist +dz, room_width +dist, room_height +dist, +dist +dz, background_get_texture(tex_skybox_up), 1, 1);
 
 //d3d_draw_floor(-dist, -dist, +dist -3800, room_width +dist, room_height +dist, +dist -3800, background_get_texture(tex_sky_tile), 10, 10);
@@ -119,10 +146,10 @@ d3d_draw_wall(room_width +dist, -dist, +dist, room_width +dist, room_height +dis
 d3d_draw_wall(room_width +dist, room_height +dist, +dist, -dist, room_height +dist, -dist, background_get_texture(tex_skybox_back), 1, 1);
 
 //mountain
-d3d_draw_wall(room_width +dist -50, -dist, 1024, room_width +dist -50, room_height +dist, 0, background_get_texture(tex_mount), 10, 1); //right
+/*d3d_draw_wall(room_width +dist -50, -dist, 1024, room_width +dist -50, room_height +dist, 0, background_get_texture(tex_mount), 10, 1); //right
 d3d_draw_wall(room_width +dist, room_height +dist -50, 1024, -dist, room_height +dist -50, 0, background_get_texture(tex_mount), 10, 1); //back
 d3d_draw_wall(-dist, -dist +50, 1024, room_width +dist, -dist +50, 0, background_get_texture(tex_mount), 10, 1);
-d3d_draw_wall(-dist +50, room_height +dist, 1024, -dist +50, -dist, 0, background_get_texture(tex_mount), 10, 1);
+d3d_draw_wall(-dist +50, room_height +dist, 1024, -dist +50, -dist, 0, background_get_texture(tex_mount), 10, 1);*/
 
 
 </string>
@@ -148,6 +175,42 @@ d3d_draw_wall(-dist +50, room_height +dist, 1024, -dist +50, -dist, 0, backgroun
           <argument>
             <kind>4</kind>
             <string>0</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="10" enumb="82">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///RESTART/RESPAWN
+if(global.server == -1)
+{
+    game_restart();
+}
+else
+{
+    obj_player.x = obj_spawn.x;
+    obj_player.y = obj_spawn.y;
+    obj_player.z = 80;
+    obj_player.is_dead = false;
+    with(obj_player) d3d_light_define_ambient(c_white);
+}    
+
+</string>
           </argument>
         </arguments>
       </action>
