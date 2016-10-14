@@ -93,49 +93,6 @@ window_set_cursor(cr_none);
         <arguments>
           <argument>
             <kind>1</kind>
-            <string>///MOVE CAMERA
-if(aim)
-{
-    direction += ((display_get_width()/2) -display_mouse_get_x()) * 0.2;
-    zdirection += ((display_get_height()/2) -display_mouse_get_y()) * 0.2;
-    //if(zdirection &gt; 85) zdirection = 85;
-    //if(zdirection &lt; -85) zdirection = -85;
-    display_mouse_set(display_get_width()/2, display_get_height()/2);
-}
-
-//per la visualizzare correttamente gli sprite degli altri player
-global.camsin = sin(direction*pi/180);
-global.camcos = cos(direction*pi/180);
-
-camx = x + lengthdir_x(128, direction);
-camy = y + lengthdir_y(128, direction);
-camz = z + zhigh + zdirection;
-
-/*camx = x + cos(degtorad(direction));
-camy = y - sin(degtorad(direction));
-camz = z + tan(degtorad(zdirection));*/
-
-
-</string>
-          </argument>
-        </arguments>
-      </action>
-      <action>
-        <libid>1</libid>
-        <id>603</id>
-        <kind>7</kind>
-        <userelative>0</userelative>
-        <isquestion>0</isquestion>
-        <useapplyto>-1</useapplyto>
-        <exetype>2</exetype>
-        <functionname></functionname>
-        <codestring></codestring>
-        <whoName>self</whoName>
-        <relative>0</relative>
-        <isnot>0</isnot>
-        <arguments>
-          <argument>
-            <kind>1</kind>
             <string>///MOVIMENTI/SALTO/ABBASSARSI
 var spid = point_distance(xprev, yprev, x, y);
 var dair = point_direction(xprev, yprev, x, y);
@@ -390,6 +347,48 @@ else
         <arguments>
           <argument>
             <kind>1</kind>
+            <string>///MOVE CAMERA
+if(aim)
+{
+    direction += ((display_get_width()/2) -display_mouse_get_x()) * 0.2;
+    zdirection += ((display_get_height()/2) -display_mouse_get_y()) * 0.2;
+    zdirection = clamp(zdirection, -89, 89);
+    display_mouse_set(display_get_width()/2, display_get_height()/2);
+}
+
+//per la visualizzare correttamente gli sprite degli altri player
+global.camsin = sin(direction*pi/180);
+global.camcos = cos(direction*pi/180);
+
+/*camx = x + lengthdir_x(128, direction);
+camy = y + lengthdir_y(128, direction);
+camz = z + zhigh + zdirection;*/
+
+camx = x + cos(degtorad(direction));
+camy = y - sin(degtorad(direction));
+camz = z + zhigh + tan(degtorad(zdirection));
+
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
             <string>///CONTROLLO SE NELLA LAVA
 if(z &lt; 16)
 {
@@ -483,6 +482,7 @@ draw_text(8, 32, "cur_speed: " + string(cur_speed));
 draw_text(8, 48, "str_speed: " + string(str_speed));
 draw_text(8, 64, "max_speed: " + string(max_speed));
 draw_text(8, 80, "direction: " + string(direction));
+draw_text(8, 96, "zdirection: " + string(zdirection));
 
 </string>
           </argument>
