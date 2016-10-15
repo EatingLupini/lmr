@@ -32,6 +32,7 @@
 //y             = 0;                //posizione y corrente
 xprev           = x;                //perchè xprevious è lezzo
 yprev           = y;                //perchè yprevious è lezzo
+dirprev         = 0;                //direzione generale precedente (comprende il movimento u/d e l/r)
 z               = 0;                //posizione z corrente
 zhigh           = 32;               //altezza corrente personaggio
 zhigh_stand     = 32;               //altezza in piedi
@@ -94,8 +95,8 @@ window_set_cursor(cr_none);
           <argument>
             <kind>1</kind>
             <string>///MOVIMENTI/SALTO/ABBASSARSI
-var spid = point_distance(xprev, yprev, x, y);
-var dair = point_direction(xprev, yprev, x, y);
+//var spid = point_distance(xprev, yprev, x, y);
+//var dair = point_direction(xprev, yprev, x, y);
 xnew = 0;
 ynew = 0;
 
@@ -105,7 +106,6 @@ if(!is_dead)
     {
         cur_speed += inc_speed;
         cur_speed = clamp(cur_speed, 0, max_speed);
-        //if(cur_speed &lt; max_speed) cur_speed += inc_speed;
         xnew += lengthdir_x(cur_speed, direction);
         ynew += lengthdir_y(cur_speed, direction);
     }
@@ -113,7 +113,6 @@ if(!is_dead)
     {
         cur_speed += inc_speed;
         cur_speed = clamp(cur_speed, 0, max_speed);
-        //if(cur_speed &lt; max_speed) cur_speed += inc_speed;
         xnew += lengthdir_x(cur_speed, direction -180);
         ynew += lengthdir_y(cur_speed, direction -180);
     }
@@ -121,7 +120,6 @@ if(!is_dead)
     {
         str_speed += inc_speed;
         str_speed = clamp(str_speed, 0, max_speed/2);
-        //if(str_speed &lt; max_speed/2) str_speed += inc_speed;
         xnew += lengthdir_x(str_speed, direction +90);
         ynew += lengthdir_y(str_speed, direction +90);
     }
@@ -129,7 +127,6 @@ if(!is_dead)
     {
         str_speed += inc_speed;
         str_speed = clamp(str_speed, 0, max_speed/2);
-        //if(str_speed &lt; max_speed/2) str_speed += inc_speed;
         xnew += lengthdir_x(str_speed, direction -90);
         ynew += lengthdir_y(str_speed, direction -90);
     }
@@ -149,18 +146,26 @@ if(!keyboard_check(ord("W")) and !keyboard_check(ord("S")) and !keyboard_check(o
     else cur_speed = 0;
     if(str_speed &gt; 0) str_speed -= dec_speed;
     else str_speed = 0;
-    if(spid -dec_speed &gt; 0)
+    if(cur_speed -dec_speed &gt; 0)//if(spid -dec_speed &gt; 0)
     {
-        xnew += lengthdir_x(spid - dec_speed, dair);
-        ynew += lengthdir_y(spid - dec_speed, dair);
+        //xnew += lengthdir_x(spid - dec_speed, dair);
+        //ynew += lengthdir_y(spid - dec_speed, dair);
+        xnew += lengthdir_x(cur_speed - dec_speed, dirprev);
+        ynew += lengthdir_y(cur_speed - dec_speed, dirprev);
     }
-    else
+    /*else
     {
         spid = 0;
         xnew += lengthdir_x(spid, dair);
         ynew += lengthdir_y(spid, dair);
+    }*/
+    
+    //aggiunto dopo
+    if(str_speed -dec_speed &gt; 0)
+    {
+        xnew += lengthdir_x(str_speed - dec_speed, dirprev);
+        ynew += lengthdir_y(str_speed - dec_speed, dirprev);
     }
-    //show_debug_message("spid: " + string(spid));
 }
 
 //crouch
@@ -256,17 +261,16 @@ if(!keyboard_check(ord("A")) and !keyboard_check(ord("D")))
           <argument>
             <kind>1</kind>
             <string>///COLLISIONI e GRAVITA'
-//new coll--------------------------------
 xprev = x;
 yprev = y;
 
 //var spd = cur_speed;
 var spd = point_distance(x, y, x + xnew, y + ynew);
-//min(point_distance(x, y, x + xnew, y + ynew), spd);
-dir = point_direction(x, y, x + xnew, y + ynew);
+var dir = point_direction(x, y, x + xnew, y + ynew);
 var xmot, ymot;
-x = xprevious;
-y = yprevious;
+//x = xprevious;
+//y = yprevious;
+
 for (i = 0; i &lt; 90; i += 5)
 {
     xmot = x + lengthdir_x(spd, dir + i);
@@ -274,6 +278,7 @@ for (i = 0; i &lt; 90; i += 5)
     idcoll = scr_enh_collision(xmot, ymot, z, zhigh, 0, 0)
     if (idcoll == noone) //(!place_meeting(xmot, ymot, obj_wall))
     {
+        dirprev = point_direction(x, y, xmot, ymot);
         x = xmot;
         y = ymot;
         break;
@@ -284,12 +289,12 @@ for (i = 0; i &lt; 90; i += 5)
     idcoll = scr_enh_collision(xmot, ymot, z, zhigh, 0, 0);
     if (idcoll == noone) //(!place_meeting(xmot, ymot, obj_wall))
     {
+        dirprev = point_direction(x, y, xmot, ymot);
         x = xmot;
         y = ymot;
         break;
     }
 }
-//----------------------------------------
 
 //gravità
 var nearid = noone; //blocco con cui potrei collidere sotto di me
@@ -318,13 +323,13 @@ else
     zspeed = 0;
     
     //se il blocco su cui mi trovo si muove
-    /*if(nearid != noone and object_is_ancestor(nearid.object_index, obj_wall_moving))
+    if(nearid != noone and object_is_ancestor(nearid.object_index, obj_wall_moving))
     {
-        //xprev = x;
-        //yprev = y;
+        xprev = x;
+        yprev = y;
         x += lengthdir_x(nearid.speed, nearid.direction);
         y += lengthdir_y(nearid.speed, nearid.direction);
-    }*/
+    }
 }
 
 </string>
@@ -366,7 +371,7 @@ camz = z + zhigh + zdirection;*/
 
 camx = x + cos(degtorad(direction));
 camy = y - sin(degtorad(direction));
-camz = z + zhigh + tan(degtorad(zdirection));
+camz = z + zhigh-2 + tan(degtorad(zdirection));
 
 
 </string>
@@ -395,6 +400,62 @@ if(z &lt; 16)
     is_dead = true;
     d3d_light_define_ambient(c_red);
 }
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="7" enumb="10">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///RESPAWN
+///VARIABILI DEL GIOCATORE
+
+//posizione iniziale
+x               = obj_spawn.x;      //posizione x corrente
+y               = obj_spawn.y;      //posizione y corrente
+xprev           = x;                //perchè xprevious è lezzo
+yprev           = y;                //perchè yprevious è lezzo
+xprevious       = x;
+xprevious       = y;
+dirprev         = 0;                //direzione generale precedente (comprende il movimento u/d e l/r)
+z               = 80;               //posizione z corrente
+xnew            = 0;                //x successiva in base alla velocità e direzione
+ynew            = 0;                //y successiva in base alla velocità e direzione
+zspeed          = 0;                //velocità attuale sull'asse z
+
+//camera
+camx            = 0;                //posizione x dove guarda la camera
+camy            = 0;                //posizione y dove guarda la camera
+camz            = 0;                //posizione z dove guarda la camera
+
+//direzione
+direction       = 0;                //direzione laterale dove guarda la camera
+zdirection      = 0;                //direzione verticale dove guarda la camera
+
+//velocità
+cur_speed       = 0;                //velocità corrente (avanti e indietro)
+str_speed       = 0;                //velocità corrente (laterale)
+
+//stato
+is_dead         = false;            //true se morto
+
+d3d_light_define_ambient(c_white);
 
 </string>
           </argument>
@@ -476,13 +537,15 @@ var dair = point_direction(xprevious, yprevious, x, y);
 
 draw_text(display_get_gui_width() -64, 0, "fps: " + string(fps));
 
-draw_text(8, 0, "z: " + string(z));
-draw_text(8, 16, "zspeed: " + string(zspeed));
-draw_text(8, 32, "cur_speed: " + string(cur_speed));
-draw_text(8, 48, "str_speed: " + string(str_speed));
-draw_text(8, 64, "max_speed: " + string(max_speed));
-draw_text(8, 80, "direction: " + string(direction));
-draw_text(8, 96, "zdirection: " + string(zdirection));
+draw_text(8, 0 * 16, "z: " + string(z));
+draw_text(8, 1 * 16, "zspeed: " + string(zspeed));
+draw_text(8, 2 * 16, "cur_speed: " + string(cur_speed));
+draw_text(8, 3 * 16, "str_speed: " + string(str_speed));
+draw_text(8, 4 * 16, "max_speed: " + string(max_speed));
+draw_text(8, 5 * 16, "x: " + string(x));
+draw_text(8, 6 * 16, "y: " + string(y));
+draw_text(8, 7 * 16, "direction: " + string(direction));
+draw_text(8, 8 * 16, "zdirection: " + string(zdirection));
 
 </string>
           </argument>
@@ -532,7 +595,8 @@ d3d_set_lighting(true);
             <kind>1</kind>
             <string>///CAMERA
 //d3d_set_projection(x, y, 10 +z, xt, yt, 10 +zt, 0, 0, 1);
-d3d_set_projection(x, y, z +zhigh -2, camx, camy, camz, 0, 0, 1);
+//d3d_set_projection(x, y, z +zhigh -2, camx, camy, camz, 0, 0, 1);
+d3d_set_projection_ext(x, y, z +zhigh -2, camx, camy, camz, 0, 0, 1, 65, view_wview/view_hview, 1, 10000);
 
 </string>
           </argument>

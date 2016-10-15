@@ -29,7 +29,7 @@
 port = get_integer("Scegli una porta: ", -1);
 if(port != -1)
 {
-    net_server = network_create_server( network_socket_tcp , port , 1 );
+    net_server = network_create_server( network_socket_tcp , port , 16 );
     send_buffer = buffer_create( 128 , buffer_fixed , 1 );
     socket_list = ds_list_create();
 }
@@ -70,10 +70,12 @@ if(ds_list_size(socket_list) &gt; 0 and instance_exists(obj_player))
     buffer_write( send_buffer , buffer_s16 , obj_player.z );
     buffer_write( send_buffer , buffer_s16 , obj_player.direction );
     
-    var socket = socket_list[| 0];
-    network_send_packet( socket , send_buffer , buffer_tell( send_buffer ) );
-    
-    //show_debug_message("server invio dati: nulla");
+    //var socket = socket_list[| 0];
+    for(var i=0; i&lt;ds_list_size(socket_list); i++)
+    {
+        var socket = socket_list[| i];
+        network_send_packet( socket , send_buffer , buffer_tell( send_buffer ) );
+    }
 }
 
 </string>

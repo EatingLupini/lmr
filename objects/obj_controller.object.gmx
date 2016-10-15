@@ -197,18 +197,13 @@ d3d_draw_wall(-dist +50, room_height +dist, 1024, -dist +50, -dist, 0, backgroun
           <argument>
             <kind>1</kind>
             <string>///RESTART/RESPAWN
-if(global.server == -1)
-{
-    game_restart();
-}
-else
-{
-    obj_player.x = obj_spawn.x;
-    obj_player.y = obj_spawn.y;
-    obj_player.z = 80;
-    obj_player.is_dead = false;
-    with(obj_player) d3d_light_define_ambient(c_white);
-}    
+with(obj_player) event_perform(ev_other, ev_user0);
+
+/*obj_player.x = obj_spawn.x;
+obj_player.y = obj_spawn.y;
+obj_player.z = 80;
+obj_player.is_dead = false;
+with(obj_player) d3d_light_define_ambient(c_white);*/
 
 </string>
           </argument>
