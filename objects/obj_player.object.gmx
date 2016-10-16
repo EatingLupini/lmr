@@ -537,7 +537,7 @@ var dair = point_direction(xprevious, yprevious, x, y);
 
 draw_text(display_get_gui_width() -64, 0, "fps: " + string(fps));
 
-draw_text(8, 0 * 16, "z: " + string(z));
+/*draw_text(8, 0 * 16, "z: " + string(z));
 draw_text(8, 1 * 16, "zspeed: " + string(zspeed));
 draw_text(8, 2 * 16, "cur_speed: " + string(cur_speed));
 draw_text(8, 3 * 16, "str_speed: " + string(str_speed));
@@ -545,7 +545,7 @@ draw_text(8, 4 * 16, "max_speed: " + string(max_speed));
 draw_text(8, 5 * 16, "x: " + string(x));
 draw_text(8, 6 * 16, "y: " + string(y));
 draw_text(8, 7 * 16, "direction: " + string(direction));
-draw_text(8, 8 * 16, "zdirection: " + string(zdirection));
+draw_text(8, 8 * 16, "zdirection: " + string(zdirection));*/
 
 </string>
           </argument>

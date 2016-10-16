@@ -25,9 +25,12 @@
         <arguments>
           <argument>
             <kind>1</kind>
-            <string>///SPAWNA PLAYER
-var ii = instance_create(x, y, obj_player);
-ii.z = 80;
+            <string>///SPAWNA PLAYER (solo se in allenamento)
+if(global.server == -1)
+{
+    var ii = instance_create(x, y, obj_player);
+    ii.z = 80;
+}
 
 </string>
           </argument>

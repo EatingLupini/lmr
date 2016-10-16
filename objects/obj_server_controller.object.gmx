@@ -26,6 +26,20 @@
           <argument>
             <kind>1</kind>
             <string>///SERVER SETUP
+
+//lista giocatori
+mynid = 0;  //il server ha mynid 0 (il client lo otterrà dal server)
+cur_id = 0;
+//map_pl_socket = ds_map_create();
+grid_players = ds_grid_create(7, 1); //socket/netid/x/y/z/dir/zdir
+
+//creo il giocatore e lo aggiungo alla lista
+var ii = instance_create(obj_spawn.x, obj_spawn.y, obj_player);
+ii.z = 80;
+//map_pl_socket[? socket] = cur_id;  //non aggiungo perchè il server non ha socket
+ds_grid_set_row_pl(grid_players, 0, -1, cur_id, obj_spawn.x, obj_spawn.y, 80, 0, 0);
+cur_id++;                          //incremento l'id corrente in modo che il prossimo giocatore avrà un nuovo id
+
 port = get_integer("Scegli una porta: ", -1);
 if(port != -1)
 {
@@ -37,6 +51,9 @@ else
 {
     room_goto(room0);
 }
+
+//debug
+debug_multi = false;
 
 </string>
           </argument>
@@ -60,23 +77,111 @@ else
         <arguments>
           <argument>
             <kind>1</kind>
+            <string>///UPDATE GRID
+var netidrow = ds_grid_find_by_col(grid_players, 1, mynid);
+ds_grid_set_row_pl(grid_players, netidrow, noone, noone,
+                    obj_player.x, obj_player.y, obj_player.z,
+                    obj_player.direction, obj_player.zdirection);
+
+/*grid_players[# 2,netidrow] = obj_player.x;
+grid_players[# 3,netidrow] = obj_player.y;
+grid_players[# 4,netidrow] = obj_player.z;
+grid_players[# 5,netidrow] = obj_player.direction;
+grid_players[# 6,netidrow] = obj_player.zdirection;*/
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
             <string>///INVIA DATI
 if(ds_list_size(socket_list) &gt; 0 and instance_exists(obj_player))
 {
-    buffer_seek( send_buffer , buffer_seek_start , 0 );
-    buffer_write( send_buffer , buffer_u8 , 1 ); //msgid
-    buffer_write( send_buffer , buffer_s16 , obj_player.x );
-    buffer_write( send_buffer , buffer_s16 , obj_player.y );
-    buffer_write( send_buffer , buffer_s16 , obj_player.z );
-    buffer_write( send_buffer , buffer_s16 , obj_player.direction );
+    var grid_string = ds_grid_write(grid_players);
+    var buffer_update = buffer_create(128 + string_byte_length(grid_string), buffer_fixed, 1);
+    buffer_seek( buffer_update , buffer_seek_start , 0);
+    buffer_write( buffer_update , buffer_u8 , 2 ); //msgid
+    buffer_write( buffer_update , buffer_string , grid_string );
     
-    //var socket = socket_list[| 0];
     for(var i=0; i&lt;ds_list_size(socket_list); i++)
     {
         var socket = socket_list[| i];
-        network_send_packet( socket , send_buffer , buffer_tell( send_buffer ) );
+        network_send_packet(socket, buffer_update, buffer_tell(buffer_update));
     }
+    
+    buffer_delete(buffer_update);
 }
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///UPDATE PLAYERS
+for(var i=0; i&lt;instance_number(obj_other_player); i++)
+{
+    var ii = instance_find(obj_other_player, i);
+    var netidrow = ds_grid_find_by_col(grid_players, 1, ii.netid);
+    ii.x = grid_players[# 2,netidrow];
+    ii.y = grid_players[# 3,netidrow];
+    ii.z = grid_players[# 4,netidrow];
+    ii.direction = grid_players[# 5,netidrow];
+    ii.zdirection = grid_players[# 6,netidrow];
+}
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///DEBUG
+if(keyboard_check_released(vk_tab))
+    debug_multi = !debug_multi;
 
 </string>
           </argument>
@@ -107,17 +212,64 @@ var type_event = ds_map_find_value( async_load , "type" );
 switch( type_event ) {
     case network_type_connect:
         var socket = ds_map_find_value( async_load , "socket" );
-        ds_list_add( socket_list , socket );
-        instance_create(obj_spawn.x, obj_spawn.y, obj_other_player);
+        ds_list_add(socket_list , socket);
+        
+        //creo nuovo giocatore e assegno il nuovo id
+        var ii = instance_create(obj_spawn.x, obj_spawn.y, obj_other_player);
+        ii.z = 80;
+        ii.netid = cur_id;
+        ds_grid_resize(grid_players, ds_grid_width(grid_players), ds_grid_height(grid_players) +1);
+        ds_grid_set_row_pl(grid_players, ds_grid_height(grid_players)-1, socket, cur_id, obj_spawn.x, obj_spawn.y, 80, 0, 0);
+        
+        //invio la lista di giocatori al client
+        var grid_string = ds_grid_write(grid_players);
+        var buf_update_list = buffer_create( 128 + string_byte_length(grid_string), buffer_fixed , 1 );
+        buffer_seek( buf_update_list , buffer_seek_start , 0 );
+        buffer_write( buf_update_list , buffer_u8 , 10 ); //msgid
+        buffer_write( buf_update_list , buffer_u8 , cur_id ); //netid specifico
+        buffer_write( buf_update_list , buffer_string , grid_string );
+        for(var i=0; i&lt;ds_list_size(socket_list); i++)
+        {
+            var s = socket_list[| i];
+            network_send_packet(s, buf_update_list, buffer_tell(buf_update_list));
+        }
+        buffer_delete(buf_update_list);
+        cur_id++; //incrementa per i prossimi client che si connettono
     break;
     case network_type_disconnect:
         var socket = ds_map_find_value( async_load , "socket" );
         var findsocket = ds_list_find_index( socket_list , socket );
-      
+        var rowsocket = ds_grid_find_by_col(grid_players, 0, socket);
+        var pl_netid = ds_grid_get(grid_players, 1, rowsocket);
+        
+        //elimino il giocatore disconnesso
+        for(var i=0; i&lt;instance_number(obj_other_player); i++)
+        {
+            var oopid = instance_find(obj_other_player, i);
+            if(oopid.netid == pl_netid)
+            {
+                ds_grid_delete_row(grid_players, rowsocket);
+                with(oopid) instance_destroy();
+                break;
+            }
+        }
+        
         if ( findsocket &gt;= 0 ) {
             ds_list_delete( socket_list , findsocket );
         }
-        with(obj_other_player) instance_destroy();
+        //invio la lista di giocatori al client
+        var grid_string = ds_grid_write(grid_players);
+        var buf_update_list = buffer_create( 128 + string_byte_length(grid_string) , buffer_fixed , 1 );
+        buffer_seek( buf_update_list , buffer_seek_start , 0 );
+        buffer_write( buf_update_list , buffer_u8 , 11 ); //msgid
+        buffer_write( buf_update_list , buffer_u8 , pl_netid); //netid specifico del client disconnesso (serve per eliminarlo)
+        buffer_write( buf_update_list , buffer_string , grid_string );
+        for(var i=0; i&lt;ds_list_size(socket_list); i++)
+        {
+            var s = socket_list[| i];
+            network_send_packet(s, buf_update_list, buffer_tell(buf_update_list));
+        }
+        buffer_delete(buf_update_list);
     break;
     case network_type_data:
         //spacchetto i dati
@@ -127,27 +279,23 @@ switch( type_event ) {
       
         var msgid = buffer_read( buffer , buffer_u8 );
 
-        show_debug_message("server ricezione dati: " + string(msgid));
+        //show_debug_message("server ricezione dati: " + string(msgid));
         
         switch( msgid ) {
             case 1:
-                if(instance_exists(obj_other_player))
-                {
-                    var ics = buffer_read( buffer , buffer_s16 );
-                    var ips = buffer_read( buffer , buffer_s16 );
-                    var zet = buffer_read( buffer , buffer_s16 );
-                    var dir = buffer_read( buffer , buffer_s16 );
-                    
-                    /*show_debug_message("x: " + string(ics));
-                    show_debug_message("y: " + string(ips));
-                    show_debug_message("z: " + string(zet));
-                    show_debug_message("d: " + string(dir));*/
-                    
-                    obj_other_player.x = ics;
-                    obj_other_player.y = ips;
-                    obj_other_player.z = zet;
-                    obj_other_player.direction = dir;
-                }
+                var nid = buffer_read( buffer , buffer_u8 );
+                var ics = buffer_read( buffer , buffer_s16 );
+                var ips = buffer_read( buffer , buffer_s16 );
+                var zet = buffer_read( buffer , buffer_s16 );
+                var dir = buffer_read( buffer , buffer_s16 );
+                var zdi = buffer_read( buffer , buffer_s16 );
+                
+                var rownetid = ds_grid_find_by_col(grid_players, 1, nid);
+                grid_players[# 2,rownetid] = ics;
+                grid_players[# 3,rownetid] = ips;
+                grid_players[# 4,rownetid] = zet;
+                grid_players[# 5,rownetid] = dir;
+                grid_players[# 6,rownetid] = zdi;
             break;
         }
     break;
@@ -179,9 +327,25 @@ switch( type_event ) {
 //draw connection
 draw_set_color(c_black);
 
-if(global.server == 1)
-    draw_text(16, display_get_gui_height() -16, "N. Clients: " + string(ds_list_size(socket_list)));
+draw_text(16, display_get_gui_height() -16, "N. Clients: " + string(ds_list_size(socket_list)));
 
+if(debug_multi)
+{
+    var w = ds_grid_width(grid_players)
+    for(var i=0; i&lt;ds_grid_height(grid_players); i++)
+    {
+        var offset = i * (w+2) * 16;
+        draw_text(8, offset + 0 * 16, "Player " + string(i));
+        draw_text(8, offset + 1 * 16, "socket: " + string(grid_players[# 0,i]));
+        draw_text(8, offset + 2 * 16, "netid: " + string(grid_players[# 1,i]));
+        draw_text(8, offset + 3 * 16, "x: " + string(grid_players[# 2,i]));
+        draw_text(8, offset + 4 * 16, "y: " + string(grid_players[# 3,i]));
+        draw_text(8, offset + 5 * 16, "z: " + string(grid_players[# 4,i]));
+        draw_text(8, offset + 6 * 16, "dir: " + string(grid_players[# 5,i]));
+        draw_text(8, offset + 7 * 16, "zdir: " + string(grid_players[# 6,i]));
+        draw_text(8, offset + 8 * 16, "---------------------");
+    }
+}
 </string>
           </argument>
         </arguments>

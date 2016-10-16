@@ -35,6 +35,9 @@
     <script>scripts\scr_movements.gml</script>
     <script>scripts\scr_enh_collision.gml</script>
     <script>scripts\scr_set_resolution.gml</script>
+    <script>scripts\ds_grid_set_row_pl.gml</script>
+    <script>scripts\ds_grid_find_by_col.gml</script>
+    <script>scripts\ds_grid_delete_row.gml</script>
   </scripts>
   <objects name="objects">
     <object>objects\obj_init</object>

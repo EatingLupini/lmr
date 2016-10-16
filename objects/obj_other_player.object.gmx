@@ -41,6 +41,9 @@ anim_speed = 0.5;
 anim_counter = 0;
 anim_cspeed = 0;
 
+//networking
+netid = -1; //codice identificativo usato per il multiplayer
+
 </string>
           </argument>
         </arguments>
