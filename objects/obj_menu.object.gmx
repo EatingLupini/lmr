@@ -55,8 +55,8 @@ find_text[2] = "Modalita'";
 find_text[3] = "Giocatori";
 
 //default
-connect_ip = "127.0.0.1";
-connect_port = "12345";
+connect_ip = global.connect_ip
+connect_port = string(global.connect_port);
 server_name = string(global.nickname) + "'s room";
 server_pass = "";
 server_numpl = 4;
@@ -331,11 +331,13 @@ if(mouse_check_button_pressed(mb_left) and editing == "null")
                         global.connect_ip = connect_ip;
                         global.connect_port = real(connect_port);
                         
+                        
                         //invio dati ad altervista
                         //e ottengo i dati per andare nella mappa corretta
                         //da fare
                         //-----------
                         
+
                         //vai alla mappa corretta
                         room_goto(rm_run_map1);
                     }
@@ -444,6 +446,9 @@ if(mouse_check_button_pressed(mb_left) and editing == "null")
     }
 }
 
+if(keyboard_check(vk_shift) || keyboard_check_pressed(ord("V")))
+    keyboard_string += clipboard_get_text();
+
 //aggiorno la variabile del testo
 switch(editing)
 {
@@ -551,6 +556,36 @@ switch(global.wut)
 
 global.wut = -1;
 
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="7" enumb="5">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string> 
+// save settings to ini
+
+ini_open(working_directory + "/settings.ini");
+ini_write_string("preferences", "ip",  global.connect_ip);
+ini_write_real("preferences", "port", global.connect_port);
+ini_write_string("preferences", "username", global.nickname);
+ini_close();
 </string>
           </argument>
         </arguments>

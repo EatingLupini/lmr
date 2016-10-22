@@ -50,7 +50,12 @@ global.server_track = 0;
 global.server_port = 12345;
 global.server_lan = false;
 
-
+// load settings from ini
+ini_open(working_directory + "/settings.ini");
+global.connect_ip = ini_read_string("preferences", "ip", "");
+global.connect_port = ini_read_real("preferences", "port", 0);
+global.nickname = ini_read_string("preferences", "username", "Player");
+ini_close(); 
 </string>
           </argument>
         </arguments>

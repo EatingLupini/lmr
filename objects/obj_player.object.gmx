@@ -412,11 +412,12 @@ else
           <argument>
             <kind>1</kind>
             <string>///MOVE CAMERA
-if(!global.chatting)//if(aim)
+if(!global.chatting &amp;&amp; !closing)//if(aim)
 {
     direction += ((display_get_width()/2) -display_mouse_get_x()) * 0.2;
     zdirection += ((display_get_height()/2) -display_mouse_get_y()) * 0.2;
     zdirection = clamp(zdirection, -89, 89);
+    
     display_mouse_set(display_get_width()/2, display_get_height()/2);
 }
 
