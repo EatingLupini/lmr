@@ -58,19 +58,56 @@ crouch_speed    = stand_speed/2;    //velocità massima abbassato
 cur_speed       = 0;                //velocità corrente (avanti e indietro)
 str_speed       = 0;                //velocità corrente (laterale)
 inc_speed       = 1;                //incremento velocità
-dec_speed       = 0.5;              //decremento velocità
+dec_speed       = 1;                //decremento velocità (era 0.5)
 cro_speed       = 2;                //velocità nell'abbassarsi
 jump_force      = 8;                //forza iniziale del salto
 
 //stato
 is_dead         = false;            //true se morto
+time_respawn    = 3;                //tempo di respawn
+cur_time_respawn= 3;                //tempo di respawn attuale
 
 //test
 aim             = true;             //se false disabilita la visuale col mouse
+closing         = false;            //true se sta per uscire
+checkpoint_id   = noone;
 
 //nasconde puntatore mouse
 window_set_cursor(cr_none);
 
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="2" enumb="0">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///TIME RESPAWN
+if(cur_time_respawn &gt; 1)
+{
+    cur_time_respawn--;
+    alarm[0] = room_speed;
+}
+else
+{
+    event_perform(ev_other, ev_user0);
+}
 
 </string>
           </argument>
@@ -94,77 +131,149 @@ window_set_cursor(cr_none);
         <arguments>
           <argument>
             <kind>1</kind>
+            <string>///CHIUDI GIOCO
+if(keyboard_check_pressed(vk_enter))
+{
+    if(closing)
+        game_end();
+}
+
+if(keyboard_check_pressed(vk_escape))
+    closing = !closing
+
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///RESPAWN FORZATO
+if(keyboard_check_pressed(ord("R")) and !global.chatting)
+{
+    if(!is_dead)
+    {
+        is_dead = true;
+        cur_time_respawn = time_respawn;
+        alarm[0] = room_speed;
+    }
+    else
+    {
+        cur_time_respawn = 0;
+        alarm[0] = -1;
+        event_perform(ev_other, ev_user0);
+    }
+}
+
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
             <string>///MOVIMENTI/SALTO/ABBASSARSI
 //var spid = point_distance(xprev, yprev, x, y);
 //var dair = point_direction(xprev, yprev, x, y);
 xnew = 0;
 ynew = 0;
 
-if(!is_dead)
+if(!global.chatting)
 {
-    if(keyboard_check(ord("W")))
+    if(!is_dead)
     {
-        cur_speed += inc_speed;
-        cur_speed = clamp(cur_speed, 0, max_speed);
-        xnew += lengthdir_x(cur_speed, direction);
-        ynew += lengthdir_y(cur_speed, direction);
-    }
-    if(keyboard_check(ord("S")))
-    {
-        cur_speed += inc_speed;
-        cur_speed = clamp(cur_speed, 0, max_speed);
-        xnew += lengthdir_x(cur_speed, direction -180);
-        ynew += lengthdir_y(cur_speed, direction -180);
-    }
-    if(keyboard_check(ord("A")))
-    {
-        str_speed += inc_speed;
-        str_speed = clamp(str_speed, 0, max_speed/2);
-        xnew += lengthdir_x(str_speed, direction +90);
-        ynew += lengthdir_y(str_speed, direction +90);
-    }
-    if(keyboard_check(ord("D")))
-    {
-        str_speed += inc_speed;
-        str_speed = clamp(str_speed, 0, max_speed/2);
-        xnew += lengthdir_x(str_speed, direction -90);
-        ynew += lengthdir_y(str_speed, direction -90);
-    }
-    
-    //salto
-    if(keyboard_check_pressed(vk_space))
-    {
-        if(zspeed == 0)
+        if(keyboard_check(ord("W")))
         {
-            zspeed = jump_force;
+            cur_speed += inc_speed;
+            cur_speed = clamp(cur_speed, 0, max_speed);
+            xnew += lengthdir_x(cur_speed, direction);
+            ynew += lengthdir_y(cur_speed, direction);
+        }
+        if(keyboard_check(ord("S")))
+        {
+            cur_speed += inc_speed;
+            cur_speed = clamp(cur_speed, 0, max_speed);
+            xnew += lengthdir_x(cur_speed, direction -180);
+            ynew += lengthdir_y(cur_speed, direction -180);
+        }
+        if(keyboard_check(ord("A")))
+        {
+            str_speed += inc_speed;
+            str_speed = clamp(str_speed, 0, max_speed/2);
+            xnew += lengthdir_x(str_speed, direction +90);
+            ynew += lengthdir_y(str_speed, direction +90);
+        }
+        if(keyboard_check(ord("D")))
+        {
+            str_speed += inc_speed;
+            str_speed = clamp(str_speed, 0, max_speed/2);
+            xnew += lengthdir_x(str_speed, direction -90);
+            ynew += lengthdir_y(str_speed, direction -90);
+        }
+        
+        //salto
+        if(keyboard_check_pressed(vk_space))
+        {
+            if(zspeed == 0)
+            {
+                zspeed = jump_force;
+            }
         }
     }
-}
-if(!keyboard_check(ord("W")) and !keyboard_check(ord("S")) and !keyboard_check(ord("A")) and !keyboard_check(ord("D")))
-{
-    if(cur_speed &gt; 0) cur_speed -= dec_speed;
-    else cur_speed = 0;
-    if(str_speed &gt; 0) str_speed -= dec_speed;
-    else str_speed = 0;
-    if(cur_speed -dec_speed &gt; 0)//if(spid -dec_speed &gt; 0)
+    if(!keyboard_check(ord("W")) and !keyboard_check(ord("S")) and !keyboard_check(ord("A")) and !keyboard_check(ord("D")))
     {
-        //xnew += lengthdir_x(spid - dec_speed, dair);
-        //ynew += lengthdir_y(spid - dec_speed, dair);
-        xnew += lengthdir_x(cur_speed - dec_speed, dirprev);
-        ynew += lengthdir_y(cur_speed - dec_speed, dirprev);
-    }
-    /*else
-    {
-        spid = 0;
-        xnew += lengthdir_x(spid, dair);
-        ynew += lengthdir_y(spid, dair);
-    }*/
-    
-    //aggiunto dopo
-    if(str_speed -dec_speed &gt; 0)
-    {
-        xnew += lengthdir_x(str_speed - dec_speed, dirprev);
-        ynew += lengthdir_y(str_speed - dec_speed, dirprev);
+        if(cur_speed &gt; 0) cur_speed -= dec_speed;
+        else cur_speed = 0;
+        if(str_speed &gt; 0) str_speed -= dec_speed;
+        else str_speed = 0;
+        if(cur_speed -dec_speed &gt; 0)//if(spid -dec_speed &gt; 0)
+        {
+            //xnew += lengthdir_x(spid - dec_speed, dair);
+            //ynew += lengthdir_y(spid - dec_speed, dair);
+            xnew += lengthdir_x(cur_speed - dec_speed, dirprev);
+            ynew += lengthdir_y(cur_speed - dec_speed, dirprev);
+        }
+        /*else
+        {
+            spid = 0;
+            xnew += lengthdir_x(spid, dair);
+            ynew += lengthdir_y(spid, dair);
+        }*/
+        
+        //aggiunto dopo
+        if(str_speed -dec_speed &gt; 0)
+        {
+            xnew += lengthdir_x(str_speed - dec_speed, dirprev);
+            ynew += lengthdir_y(str_speed - dec_speed, dirprev);
+        }
     }
 }
 
@@ -190,56 +299,6 @@ else
 }
 
 
-//----------------OLD-------------------
-/*if(keyboard_check(ord("W")))
-{
-    if(cur_speed &lt; max_speed) cur_speed += inc_speed;
-    xnew += lengthdir_x(cur_speed, direction);
-    ynew += lengthdir_y(cur_speed, direction);
-}
-if(keyboard_check(ord("S")))
-{
-    if(cur_speed &gt; -max_speed) cur_speed -= inc_speed;
-    xnew += lengthdir_x(cur_speed, direction);
-    ynew += lengthdir_y(cur_speed, direction);
-}
-if(keyboard_check(ord("A")))
-{
-    if(str_speed &lt; max_speed/2) str_speed += inc_speed;
-    xnew += lengthdir_x(str_speed, direction +90);
-    ynew += lengthdir_y(str_speed, direction +90);
-}
-if(keyboard_check(ord("D")))
-{
-    if(str_speed &gt; -max_speed/2) str_speed -= inc_speed;
-    xnew += lengthdir_x(str_speed, direction +90); //-90
-    ynew += lengthdir_y(str_speed, direction +90); //-90
-}
-if(!keyboard_check(ord("W")) and !keyboard_check(ord("S")))
-{
-    //friction
-    if(cur_speed &gt; 0) cur_speed -= inc_speed;
-    else if(cur_speed &lt; 0) cur_speed += 0.5;
-    else cur_speed = 0;
-    xnew += lengthdir_x(cur_speed, direction);
-    ynew += lengthdir_y(cur_speed, direction);
-}
-if(!keyboard_check(ord("A")) and !keyboard_check(ord("D")))
-{
-    //friction
-    if(str_speed &gt; 0) str_speed -= inc_speed;
-    else if(str_speed &lt; 0) str_speed += 0.5;
-    else str_speed = 0;
-    xnew += lengthdir_x(str_speed, direction +90);
-    ynew += lengthdir_y(str_speed, direction +90);
-}*/
-
-//xnew e ynew vengono utilizzate nello script COLLISIONI
-/*if(instance_place(x +xnew, y +ynew, obj_wall) == noone)
-{
-    x += xnew;
-    y += ynew;
-}*/
 </string>
           </argument>
         </arguments>
@@ -353,7 +412,7 @@ else
           <argument>
             <kind>1</kind>
             <string>///MOVE CAMERA
-if(aim)
+if(!global.chatting)//if(aim)
 {
     direction += ((display_get_width()/2) -display_mouse_get_x()) * 0.2;
     zdirection += ((display_get_height()/2) -display_mouse_get_y()) * 0.2;
@@ -394,11 +453,72 @@ camz = z + zhigh-2 + tan(degtorad(zdirection));
         <arguments>
           <argument>
             <kind>1</kind>
+            <string>///CONTROLLO CHECKPOINT
+var c = scr_enh_collision(x, y, z, zhigh, 0, 0, obj_checkpoint);
+if(c != noone and c != checkpoint_id)
+    checkpoint_id = c;
+
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///CONTROLLO SE ALLA FINE DEL PERCORSO
+if(scr_enh_collision(x, y, z, zhigh, 0, 0, obj_end))
+{
+    if(global.server == 1)
+        with(obj_server_controller) event_perform(ev_other, ev_user0);
+    else if(global.server == 0)
+        with(obj_client_controller) event_perform(ev_other, ev_user0);
+    else
+    {
+    }
+}
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
             <string>///CONTROLLO SE NELLA LAVA
-if(z &lt; 16)
+if(z &lt; 16 and !is_dead)
 {
     is_dead = true;
     d3d_light_define_ambient(c_red);
+    
+    cur_time_respawn = time_respawn;
+    alarm[0] = room_speed;
 }
 
 </string>
@@ -427,14 +547,23 @@ if(z &lt; 16)
 ///VARIABILI DEL GIOCATORE
 
 //posizione iniziale
-x               = obj_spawn.x;      //posizione x corrente
-y               = obj_spawn.y;      //posizione y corrente
+if(checkpoint_id == noone)
+{
+    x               = obj_spawn.x;      //posizione x corrente
+    y               = obj_spawn.y;      //posizione y corrente
+}
+else
+{
+    x               = checkpoint_id.x;      //posizione x corrente
+    y               = checkpoint_id.y;      //posizione y corrente
+}
 xprev           = x;                //perchè xprevious è lezzo
 yprev           = y;                //perchè yprevious è lezzo
 xprevious       = x;
 xprevious       = y;
 dirprev         = 0;                //direzione generale precedente (comprende il movimento u/d e l/r)
 z               = 80;               //posizione z corrente
+zhigh           = zhigh_stand
 xnew            = 0;                //x successiva in base alla velocità e direzione
 ynew            = 0;                //y successiva in base alla velocità e direzione
 zspeed          = 0;                //velocità attuale sull'asse z
@@ -504,12 +633,140 @@ d3d_set_lighting(false);
         <arguments>
           <argument>
             <kind>1</kind>
-            <string>///DRAW AIM
+            <string>///DRAW
+//palette
+col_pal_two[0] = make_colour_rgb(97,124,115);   //sailor's blue
+col_pal_two[1] = make_colour_rgb(236,197,102);  //butter
+col_pal_two[2] = make_colour_rgb(254,142,44);   //orange
+col_pal_two[3] = make_colour_rgb(254,142,44);   //earth
+col_pal_two[4] = make_colour_rgb(37,12,7);      //qblack
+
+//il resto
 draw_set_colour(c_white);
-var cx = display_get_gui_width()/2;
-var cy = display_get_gui_height()/2;
-draw_line_width(cx -16, cy, cx +16, cy, 2);
-draw_line_width(cx, cy -16, cx, cy +16, 2);
+
+var wnr = -1;   //winner
+var grd = -1;   //grid_players
+var gst = 1;    //game_status
+if(global.server == 1)
+{
+    wnr = obj_server_controller.winner;
+    grd = obj_server_controller.grid_players;
+    gst = obj_server_controller.game_status;
+}
+else if(global.server == 0)
+{
+    wnr = obj_client_controller.winner;
+    grd = obj_client_controller.grid_players;
+    gst = obj_client_controller.game_status;
+}
+
+//se non si sta uscendo dal gioco
+if(!closing)
+{
+    //se si è in gioco (winner = -1 e game_status != 2)
+    if(wnr == -1 and gst != 2)
+    {
+        //aim
+        if(!is_dead)
+        {
+            var cx = display_get_gui_width()/2;
+            var cy = display_get_gui_height()/2;
+            draw_line_width(cx -16, cy, cx +16, cy, 2);
+            draw_line_width(cx, cy -16, cx, cy +16, 2);
+        }
+        
+        //time respawn
+        if(is_dead)
+        {
+            draw_set_font(fnt_inc_big);
+            draw_set_halign(fa_center);
+            draw_set_valign(fa_middle);
+            draw_text(display_get_gui_width()/2, display_get_gui_height()/2, string(cur_time_respawn));
+            
+            draw_set_font(fnt_inc);
+            draw_set_halign(fa_left);
+            draw_set_valign(fa_top);
+        }
+    }
+    else
+    {
+        //prendo il nome del vincitore
+        var row_wnr = ds_grid_find_by_col(grd, 1, wnr);
+        var str_wnr = grd[# 7,row_wnr];
+        
+        //draw vincitore
+        draw_set_font(fnt_inc_big);
+        draw_set_halign(fa_center);
+        draw_set_valign(fa_middle);
+        draw_text(display_get_gui_width()/2, display_get_gui_height()/2, "Il vincitore e'#" + str_wnr);
+        
+        draw_set_font(fnt_inc);
+        draw_set_halign(fa_left);
+        draw_set_valign(fa_top);
+    }
+}
+else
+{
+    //draw vincitore
+    draw_set_font(fnt_inc_big);
+    draw_set_halign(fa_center);
+    draw_set_valign(fa_middle);
+    draw_text(display_get_gui_width()/2, display_get_gui_height()/2, "Vuoi uscire?");
+    
+    draw_set_font(fnt_inc);
+    draw_set_halign(fa_left);
+    draw_set_valign(fa_top);
+}
+
+//mostra nickname giocatore
+var mxdist = 1024;
+var collid = noone;
+var dist = mxdist;
+
+for(var i=0; i&lt;instance_number(obj_other_player); i++)
+{
+    var ii = instance_find(obj_other_player, i);
+    if(collision_line(x, y, x +lengthdir_x(mxdist, direction), y +lengthdir_y(mxdist, direction), ii, true, false) != noone)
+    {
+        var cur_dist = point_distance_3d(x, y, z, ii.x, ii.y, ii.z);
+        if(cur_dist &lt; dist)
+        {
+            collid = ii;
+            dist = cur_dist;
+        }
+    }
+}
+
+
+var nocoll = true;
+for(var i=0; i&lt;instance_number(obj_wall1); i++)
+{
+    var ii = instance_find(obj_wall1, i);
+    if(collision_line(x, y, x +lengthdir_x(dist-1, direction), y +lengthdir_y(dist-1, direction), ii, true, false) != noone)
+        nocoll = false;
+}
+
+if(collid != noone and nocoll)
+{
+    //prendo il nome del vincitore
+    var row_wnr = ds_grid_find_by_col(grd, 1, collid.netid);
+    var str_wnr = grd[# 7,row_wnr];
+    
+    draw_set_alpha(0.5);
+    draw_set_colour(col_pal_two[4]);
+    draw_rectangle(display_get_gui_width()/2 -128, display_get_gui_height() -96, display_get_gui_width()/2 +128, display_get_gui_height() -32, false);
+    draw_set_alpha(1);
+    draw_set_colour(c_white);
+    draw_set_font(fnt_inc);
+    draw_set_halign(fa_center);
+    draw_set_valign(fa_middle);
+    draw_text(display_get_gui_width()/2, display_get_gui_height() -64, str_wnr);
+    
+    draw_set_halign(fa_left);
+    draw_set_valign(fa_top);
+}
+
+
 
 </string>
           </argument>
@@ -535,7 +792,7 @@ draw_line_width(cx, cy -16, cx, cy +16, 2);
 var spid = point_distance(xprevious, yprevious, x, y);
 var dair = point_direction(xprevious, yprevious, x, y);
 
-draw_text(display_get_gui_width() -64, 0, "fps: " + string(fps));
+draw_text(display_get_gui_width() -128, 0, "fps: " + string(fps));
 
 /*draw_text(8, 0 * 16, "z: " + string(z));
 draw_text(8, 1 * 16, "zspeed: " + string(zspeed));
@@ -596,7 +853,7 @@ d3d_set_lighting(true);
             <string>///CAMERA
 //d3d_set_projection(x, y, 10 +z, xt, yt, 10 +zt, 0, 0, 1);
 //d3d_set_projection(x, y, z +zhigh -2, camx, camy, camz, 0, 0, 1);
-d3d_set_projection_ext(x, y, z +zhigh -2, camx, camy, camz, 0, 0, 1, 65, view_wview/view_hview, 1, 10000);
+d3d_set_projection_ext(x, y, z +zhigh -2, camx, camy, camz, 0, 0, 1, /*65*/80, view_wview/view_hview, 1, 10000);
 
 </string>
           </argument>
@@ -622,34 +879,6 @@ d3d_set_projection_ext(x, y, z +zhigh -2, camx, camy, camz, 0, 0, 1, 65, view_wv
             <kind>1</kind>
             <string>///test
 aim = !aim;
-
-</string>
-          </argument>
-        </arguments>
-      </action>
-    </event>
-    <event eventtype="10" enumb="79">
-      <action>
-        <libid>1</libid>
-        <id>603</id>
-        <kind>7</kind>
-        <userelative>0</userelative>
-        <isquestion>0</isquestion>
-        <useapplyto>-1</useapplyto>
-        <exetype>2</exetype>
-        <functionname></functionname>
-        <codestring></codestring>
-        <whoName>self</whoName>
-        <relative>0</relative>
-        <isnot>0</isnot>
-        <arguments>
-          <argument>
-            <kind>1</kind>
-            <string>///test
-var nea = instance_nearest(x, y, obj_wall);
-x = 160;
-y = 160;
-z = 0;
 
 </string>
           </argument>

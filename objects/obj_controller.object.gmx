@@ -196,34 +196,13 @@ d3d_draw_wall(-dist +50, room_height +dist, 1024, -dist +50, -dist, 0, backgroun
         <arguments>
           <argument>
             <kind>1</kind>
-            <string>///RESTART/RESPAWN
-with(obj_player) event_perform(ev_other, ev_user0);
+            <string>///RESTART/RESPAWN (commentato)
+//with(obj_player) event_perform(ev_other, ev_user0);
 
-/*obj_player.x = obj_spawn.x;
-obj_player.y = obj_spawn.y;
-obj_player.z = 80;
-obj_player.is_dead = false;
-with(obj_player) d3d_light_define_ambient(c_white);*/
 
 </string>
           </argument>
         </arguments>
-      </action>
-    </event>
-    <event eventtype="10" enumb="27">
-      <action>
-        <libid>1</libid>
-        <id>332</id>
-        <kind>0</kind>
-        <userelative>0</userelative>
-        <isquestion>0</isquestion>
-        <useapplyto>0</useapplyto>
-        <exetype>1</exetype>
-        <functionname>action_end_game</functionname>
-        <codestring></codestring>
-        <whoName>self</whoName>
-        <relative>0</relative>
-        <isnot>0</isnot>
       </action>
     </event>
   </events>

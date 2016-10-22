@@ -1,4 +1,4 @@
-///ds_grid_set_row_pl(id, row, socket, netid, x, y, z, dir, zdir)
+///ds_grid_set_row_pl(id, row, socket, netid, x, y, z, dir, zdir, nickname)
 
 var dsid = argument[0];
 var row = argument[1];

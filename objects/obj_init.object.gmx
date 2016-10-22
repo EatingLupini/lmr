@@ -8,44 +8,6 @@
   <parentName>&lt;undefined&gt;</parentName>
   <maskName>&lt;undefined&gt;</maskName>
   <events>
-    <event eventtype="3" enumb="0">
-      <action>
-        <libid>1</libid>
-        <id>603</id>
-        <kind>7</kind>
-        <userelative>0</userelative>
-        <isquestion>0</isquestion>
-        <useapplyto>-1</useapplyto>
-        <exetype>2</exetype>
-        <functionname></functionname>
-        <codestring></codestring>
-        <whoName>self</whoName>
-        <relative>0</relative>
-        <isnot>0</isnot>
-        <arguments>
-          <argument>
-            <kind>1</kind>
-            <string>///SCELTA
-if(keyboard_check_released(ord("1")))
-{
-    global.server = true;
-    room_goto_next();
-}
-if(keyboard_check_released(ord("2")))
-{
-    global.server = false;
-    room_goto_next();
-}
-if(keyboard_check_released(ord("0")))
-{
-    global.server = -1;
-    room_goto_next();
-}
-</string>
-          </argument>
-        </arguments>
-      </action>
-    </event>
     <event eventtype="7" enumb="2">
       <action>
         <libid>1</libid>
@@ -67,6 +29,27 @@ if(keyboard_check_released(ord("0")))
 global.server = -1;
 global.camsin = 0; //sin(direction*pi/180);
 global.camcos = 0; //cos(direction*pi/180);
+
+global.wut = -1;                      //rappresenta il tasto esatto che è stato premuto
+global.mex_error = ds_list_create();  //lista di errori nel menu
+global.chatting = false;
+
+//settaggi giocatore
+global.nickname = "Player";
+global.music = 100;
+global.sfx = 100;
+
+//per impostare il server
+global.connect_ip = "";
+global.connect_port = 12345;
+global.server_name = string(global.nickname) + "'s room";
+global.server_pass = "";
+global.server_numpl = 4;
+global.server_mode = 0;
+global.server_track = 0;
+global.server_port = 12345;
+global.server_lan = false;
+
 
 </string>
           </argument>
@@ -95,6 +78,29 @@ scr_set_resolution();
           </argument>
         </arguments>
       </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///CREA MENU
+instance_create(0, 0, obj_menu);
+
+</string>
+          </argument>
+        </arguments>
+      </action>
     </event>
     <event eventtype="8" enumb="64">
       <action>
@@ -113,17 +119,34 @@ scr_set_resolution();
         <arguments>
           <argument>
             <kind>1</kind>
-            <string>///DRAW MENU
+            <string>///DRAW MENU (commentato)
+/*
 draw_set_halign(fa_center);
 draw_set_color(c_white);
 draw_text(display_get_gui_width()/2, display_get_gui_height()/2 -64, "1 -&gt; Crea server");
 draw_text(display_get_gui_width()/2, display_get_gui_height()/2 -32, "2 -&gt; Entra in un server");
 draw_text(display_get_gui_width()/2, display_get_gui_height()/2 -0, "0 -&gt; Allenamento");
 draw_set_halign(fa_left);
-
+*/
 </string>
           </argument>
         </arguments>
+      </action>
+    </event>
+    <event eventtype="10" enumb="116">
+      <action>
+        <libid>1</libid>
+        <id>222</id>
+        <kind>0</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>0</useapplyto>
+        <exetype>1</exetype>
+        <functionname>action_next_room</functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
       </action>
     </event>
     <event eventtype="10" enumb="115">
@@ -146,22 +169,6 @@ draw_set_halign(fa_left);
             <string>0</string>
           </argument>
         </arguments>
-      </action>
-    </event>
-    <event eventtype="10" enumb="32">
-      <action>
-        <libid>1</libid>
-        <id>222</id>
-        <kind>0</kind>
-        <userelative>0</userelative>
-        <isquestion>0</isquestion>
-        <useapplyto>0</useapplyto>
-        <exetype>1</exetype>
-        <functionname>action_next_room</functionname>
-        <codestring></codestring>
-        <whoName>self</whoName>
-        <relative>0</relative>
-        <isnot>0</isnot>
       </action>
     </event>
   </events>

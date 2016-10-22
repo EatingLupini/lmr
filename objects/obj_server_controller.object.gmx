@@ -3,7 +3,7 @@
   <spriteName>&lt;undefined&gt;</spriteName>
   <solid>0</solid>
   <visible>-1</visible>
-  <depth>0</depth>
+  <depth>10</depth>
   <persistent>0</persistent>
   <parentName>&lt;undefined&gt;</parentName>
   <maskName>&lt;undefined&gt;</maskName>
@@ -28,32 +28,122 @@
             <string>///SERVER SETUP
 
 //lista giocatori
-mynid = 0;  //il server ha mynid 0 (il client lo otterrà dal server)
-cur_id = 0;
-//map_pl_socket = ds_map_create();
-grid_players = ds_grid_create(7, 1); //socket/netid/x/y/z/dir/zdir
+mynid = 0;                              //il server ha mynid 0 (il client lo otterrà dal server)
+cur_id = 0;                             //id corrente da assegnare al prossimo player
+grid_players = ds_grid_create(8, 1);    //socket/netid/x/y/z/dir/zdir//nickname
+chat = ds_list_create();                //lista di messaggi inviati
+
+//variabili di gioco
+game_status = 0;                        //0 = server appena creato (nessun altro giocatore connesso); 1 = ancora in corsa; 2 = un giocatore ha vinto
+winner = -1;
+time_restart = 5;
+cur_time_restart = 5;
+global.chatting = false;
+chat_text = "";
+new_text = "";
+time_chat = 5;
+cur_time_chat = 0;
 
 //creo il giocatore e lo aggiungo alla lista
 var ii = instance_create(obj_spawn.x, obj_spawn.y, obj_player);
 ii.z = 80;
-//map_pl_socket[? socket] = cur_id;  //non aggiungo perchè il server non ha socket
-ds_grid_set_row_pl(grid_players, 0, -1, cur_id, obj_spawn.x, obj_spawn.y, 80, 0, 0);
-cur_id++;                          //incremento l'id corrente in modo che il prossimo giocatore avrà un nuovo id
+ds_grid_set_row_pl(grid_players, 0, -1, cur_id, obj_spawn.x, obj_spawn.y, 80, 0, 0, global.nickname);
+cur_id++; //incremento l'id corrente in modo che il prossimo giocatore avrà un nuovo id
 
-port = get_integer("Scegli una porta: ", -1);
-if(port != -1)
-{
-    net_server = network_create_server( network_socket_tcp , port , 16 );
-    send_buffer = buffer_create( 128 , buffer_fixed , 1 );
-    socket_list = ds_list_create();
-}
-else
-{
-    room_goto(room0);
-}
+//inizializzo il server
+net_server = network_create_server( network_socket_tcp , global.server_port , global.server_numpl );
+send_buffer = buffer_create( 128 , buffer_fixed , 1 );
+socket_list = ds_list_create();
 
 //debug
 debug_multi = false;
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="2" enumb="1">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///TIME CHAT
+if(cur_time_chat &gt; 0)
+{
+    cur_time_chat--;
+    alarm[1] = room_speed;
+}
+
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="2" enumb="0">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///TIME RESTART
+if(cur_time_restart &gt; 1)
+{
+    cur_time_restart--;
+    alarm[0] = room_speed;
+}
+else
+{
+    if(ds_list_size(socket_list) &gt; 0)
+        game_status = 1;
+    else
+        game_status = 0;
+    winner = -1;
+    
+    //resetta il giocatore del server
+    with(obj_player)
+    {
+        checkpoint_id = noone;
+        event_perform(ev_other, ev_user0);
+    }
+    
+    //invia ai client il segnale di resettare
+    var buffer_victory = buffer_create(128, buffer_fixed, 1);
+    buffer_seek(buffer_victory, buffer_seek_start, 0);
+    buffer_write(buffer_victory, buffer_u8, 3); //msgid
+    buffer_write(buffer_victory, buffer_u8, game_status);
+    buffer_write(buffer_victory, buffer_s8, winner);
+    for(var i=0; i&lt;ds_list_size(socket_list); i++)
+    {
+        var socket = socket_list[| i];
+        network_send_packet(socket, buffer_victory, buffer_tell(buffer_victory));
+    }
+    buffer_delete(buffer_victory);
+}
 
 </string>
           </argument>
@@ -77,11 +167,58 @@ debug_multi = false;
         <arguments>
           <argument>
             <kind>1</kind>
+            <string>///CHAT
+if(global.chatting)
+{
+    //chiudi chat e invia messaggio
+    if(keyboard_check_pressed(vk_enter))
+    {
+        new_mex = global.nickname + ": " + chat_text;
+        send_message(new_mex, true);
+        event_perform(ev_other, ev_user1);
+        
+        global.chatting = false;
+        keyboard_string = "";
+    }
+
+    //aggiorna testo
+    chat_text = keyboard_string;
+    if(string_length(chat_text) &gt; 250)
+        keyboard_string = string_copy(chat_text, 1, 250);
+}
+
+if(keyboard_check_pressed(ord("T")) and !global.chatting)
+{
+    global.chatting = true;
+    keyboard_string = "";
+}
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
             <string>///UPDATE GRID
 var netidrow = ds_grid_find_by_col(grid_players, 1, mynid);
 ds_grid_set_row_pl(grid_players, netidrow, noone, noone,
                     obj_player.x, obj_player.y, obj_player.z,
-                    obj_player.direction, obj_player.zdirection);
+                    obj_player.direction, obj_player.zdirection,
+                    global.nickname);
 
 /*grid_players[# 2,netidrow] = obj_player.x;
 grid_players[# 3,netidrow] = obj_player.y;
@@ -123,7 +260,6 @@ if(ds_list_size(socket_list) &gt; 0 and instance_exists(obj_player))
         var socket = socket_list[| i];
         network_send_packet(socket, buffer_update, buffer_tell(buffer_update));
     }
-    
     buffer_delete(buffer_update);
 }
 
@@ -157,6 +293,7 @@ for(var i=0; i&lt;instance_number(obj_other_player); i++)
     ii.z = grid_players[# 4,netidrow];
     ii.direction = grid_players[# 5,netidrow];
     ii.zdirection = grid_players[# 6,netidrow];
+    //nickname = grid_players[# 7,netidrow];
 }
 
 </string>
@@ -219,7 +356,7 @@ switch( type_event ) {
         ii.z = 80;
         ii.netid = cur_id;
         ds_grid_resize(grid_players, ds_grid_width(grid_players), ds_grid_height(grid_players) +1);
-        ds_grid_set_row_pl(grid_players, ds_grid_height(grid_players)-1, socket, cur_id, obj_spawn.x, obj_spawn.y, 80, 0, 0);
+        ds_grid_set_row_pl(grid_players, ds_grid_height(grid_players)-1, socket, cur_id, obj_spawn.x, obj_spawn.y, 80, 0, 0, "Player");
         
         //invio la lista di giocatori al client
         var grid_string = ds_grid_write(grid_players);
@@ -235,6 +372,15 @@ switch( type_event ) {
         }
         buffer_delete(buf_update_list);
         cur_id++; //incrementa per i prossimi client che si connettono
+        
+        //se è il primo utente a connettersi il gioco inizia
+        if(ds_list_size(socket_list) == 1)
+        {
+            //per resettare il giocatore del server
+            //e segnalare ai client di resettare
+            cur_time_restart = 0;
+            event_perform(ev_alarm, 0);
+        }
     break;
     case network_type_disconnect:
         var socket = ds_map_find_value( async_load , "socket" );
@@ -257,6 +403,14 @@ switch( type_event ) {
         if ( findsocket &gt;= 0 ) {
             ds_list_delete( socket_list , findsocket );
         }
+        
+        //se non ci sono più client resetto il gioco
+        if(ds_list_size(socket_list) == 0)
+        {
+            game_status = 0;
+            winner = -1;
+        }
+        
         //invio la lista di giocatori al client
         var grid_string = ds_grid_write(grid_players);
         var buf_update_list = buffer_create( 128 + string_byte_length(grid_string) , buffer_fixed , 1 );
@@ -289,6 +443,7 @@ switch( type_event ) {
                 var zet = buffer_read( buffer , buffer_s16 );
                 var dir = buffer_read( buffer , buffer_s16 );
                 var zdi = buffer_read( buffer , buffer_s16 );
+                var nic = buffer_read( buffer , buffer_string );
                 
                 var rownetid = ds_grid_find_by_col(grid_players, 1, nid);
                 grid_players[# 2,rownetid] = ics;
@@ -296,9 +451,118 @@ switch( type_event ) {
                 grid_players[# 4,rownetid] = zet;
                 grid_players[# 5,rownetid] = dir;
                 grid_players[# 6,rownetid] = zdi;
-            break;
+                grid_players[# 7,rownetid] = nic;
+                break;
+                
+            case 3:
+                var gs = buffer_read(buffer, buffer_u8);    //game_status
+                var wr = buffer_read(buffer, buffer_s8);    //winner
+                
+                if(game_status == 1)
+                {
+                    game_status = gs;
+                    winner = wr;
+                    
+                    //avverto gli altri giocatori del vincitore
+                    var buffer_victory = buffer_create(128, buffer_fixed, 1);
+                    buffer_seek(buffer_victory, buffer_seek_start, 0);
+                    buffer_write(buffer_victory, buffer_u8, 3); //msgid
+                    buffer_write(buffer_victory, buffer_u8, game_status);
+                    buffer_write(buffer_victory, buffer_s8, winner);
+                    for(var i=0; i&lt;ds_list_size(socket_list); i++)
+                    {
+                        var socket = socket_list[| i];
+                        network_send_packet(socket, buffer_victory, buffer_tell(buffer_victory));
+                    }
+                    buffer_delete(buffer_victory);
+                    
+                    //avvio il timer per riavviare la partita
+                    cur_time_restart = time_restart;
+                    alarm[0] = room_speed;
+                }
+                break;
+            case 20:
+                new_text = buffer_read(buffer, buffer_string);
+                event_perform(ev_other, ev_user1);
+                break;
         }
     break;
+}
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="7" enumb="11">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///NUOVO MESSAGGIO IN ARRIVO
+ds_list_add(chat, new_text);
+new_text = "";
+
+cur_time_chat = time_chat;
+alarm[1] = room_speed;
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+    </event>
+    <event eventtype="7" enumb="10">
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
+            <string>///TRAGUARDO e GAME RESTART
+if(game_status == 1)
+{
+    //il server è il vincitore
+    game_status = 2;
+    winner = mynid;
+    
+    //avverto gli altri giocatori del vincitore
+    var buffer_victory = buffer_create(128, buffer_fixed, 1);
+    buffer_seek(buffer_victory, buffer_seek_start, 0);
+    buffer_write(buffer_victory, buffer_u8, 3); //msgid
+    buffer_write(buffer_victory, buffer_u8, game_status);
+    buffer_write(buffer_victory, buffer_s8, winner);
+    for(var i=0; i&lt;ds_list_size(socket_list); i++)
+    {
+        var socket = socket_list[| i];
+        network_send_packet(socket, buffer_victory, buffer_tell(buffer_victory));
+    }
+    buffer_delete(buffer_victory);
+    
+    //avvio il timer per riavviare la partita
+    cur_time_restart = time_restart;
+    alarm[0] = room_speed;
 }
 
 </string>
@@ -323,11 +587,73 @@ switch( type_event ) {
         <arguments>
           <argument>
             <kind>1</kind>
+            <string>///CHAT
+//palette
+col_pal_two[0] = make_colour_rgb(97,124,115);   //sailor's blue
+col_pal_two[1] = make_colour_rgb(236,197,102);  //butter
+col_pal_two[2] = make_colour_rgb(254,142,44);   //orange
+col_pal_two[3] = make_colour_rgb(254,142,44);   //earth
+col_pal_two[4] = make_colour_rgb(37,12,7);      //qblack
+
+if(cur_time_chat &gt; 0 or global.chatting)
+{
+    var yoff = display_get_gui_height()/2 -256;
+    
+    draw_set_alpha(0.5);
+    draw_set_colour(col_pal_two[4]);
+    draw_rectangle(32, yoff, 32 +256, yoff +512, false);
+    
+    draw_set_alpha(1);
+    draw_set_colour(c_white);
+    var lstoff = 0;
+    if(ds_list_size(chat)-16 &gt; 0)
+        lstoff = ds_list_size(chat)-16;
+    for(var i=0; i&lt;16; i++)
+    {
+        if(i &lt; ds_list_size(chat))
+            draw_text(32, yoff +i*32, chat[| i+lstoff]);
+    }
+}
+
+if(global.chatting)
+{
+    draw_set_alpha(0.5);
+    draw_set_colour(col_pal_two[4]);
+    draw_rectangle(32, display_get_gui_height() -64, 32 +256, display_get_gui_height() -32, false);
+    
+    draw_set_alpha(1);
+    draw_set_colour(c_white);
+    draw_text(32, display_get_gui_height() -64, chat_text);
+}
+
+
+</string>
+          </argument>
+        </arguments>
+      </action>
+      <action>
+        <libid>1</libid>
+        <id>603</id>
+        <kind>7</kind>
+        <userelative>0</userelative>
+        <isquestion>0</isquestion>
+        <useapplyto>-1</useapplyto>
+        <exetype>2</exetype>
+        <functionname></functionname>
+        <codestring></codestring>
+        <whoName>self</whoName>
+        <relative>0</relative>
+        <isnot>0</isnot>
+        <arguments>
+          <argument>
+            <kind>1</kind>
             <string>///DEBUG
 //draw connection
+/*draw_set_halign(fa_left);
+draw_set_valign(fa_top);
 draw_set_color(c_black);
 
-draw_text(16, display_get_gui_height() -16, "N. Clients: " + string(ds_list_size(socket_list)));
+draw_text(16, display_get_gui_height() -32, "N. Clients: " + string(ds_list_size(socket_list)));
 
 if(debug_multi)
 {
@@ -336,16 +662,18 @@ if(debug_multi)
     {
         var offset = i * (w+2) * 16;
         draw_text(8, offset + 0 * 16, "Player " + string(i));
-        draw_text(8, offset + 1 * 16, "socket: " + string(grid_players[# 0,i]));
-        draw_text(8, offset + 2 * 16, "netid: " + string(grid_players[# 1,i]));
-        draw_text(8, offset + 3 * 16, "x: " + string(grid_players[# 2,i]));
-        draw_text(8, offset + 4 * 16, "y: " + string(grid_players[# 3,i]));
-        draw_text(8, offset + 5 * 16, "z: " + string(grid_players[# 4,i]));
-        draw_text(8, offset + 6 * 16, "dir: " + string(grid_players[# 5,i]));
-        draw_text(8, offset + 7 * 16, "zdir: " + string(grid_players[# 6,i]));
-        draw_text(8, offset + 8 * 16, "---------------------");
+        draw_text(8, offset + 1 * 16, "nickname: " + string(grid_players[# 7,i]));
+        draw_text(8, offset + 2 * 16, "socket: " + string(grid_players[# 0,i]));
+        draw_text(8, offset + 3 * 16, "netid: " + string(grid_players[# 1,i]));
+        draw_text(8, offset + 4 * 16, "x: " + string(grid_players[# 2,i]));
+        draw_text(8, offset + 5 * 16, "y: " + string(grid_players[# 3,i]));
+        draw_text(8, offset + 6 * 16, "z: " + string(grid_players[# 4,i]));
+        draw_text(8, offset + 7 * 16, "dir: " + string(grid_players[# 5,i]));
+        draw_text(8, offset + 8 * 16, "zdir: " + string(grid_players[# 6,i]));
+        draw_text(8, offset + 9 * 16, "---------------------");
     }
-}
+}*/
+
 </string>
           </argument>
         </arguments>
